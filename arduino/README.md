@@ -12,4 +12,6 @@ For testing purposes calibration can also be initiated from arduino IDE console 
 * Magnetometers: ST LIS3MDL (reccommended), NXP FXOS_8700
 * Accelerometer: NXP FXOS_8700
 
+Note: the FOXS_8700 combines magnetometer and accelerometer on the same chip. For use with the gazza-flat-magnetometer sketch you'd need to use two of these chips because the two sensors must be mounted in diferent positions.
+
 As a joystick, any analog joystick for arduino will fit. Needs X and Y movements and pushbutton function. Wiring explained in the hardware section of this repository.
