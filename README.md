@@ -37,3 +37,16 @@ More information on each component is provided in the respective folders.
 - [ ] Unit tests
 - [ ] Documentation
 - [ ] Flutter application as alternative to browser based GUI
+
+## How to build
+1. download gerber files from the hardware sections and get the pcb etched by your favorite service
+2. solder the two capacitors and all the sockets to plug the external devices (Raspberry connector must be soldered on the back side)
+3. plug in the two stepper drivers
+4. flash the teensy with the sketch in arduino folder
+5. plug the teensy on the PCB socket
+6. plug the PCB onto the RPi3 GPIO
+7. flash the RPi3 card with the nerves image provided in raspberry folder. Or, if preferred, compile the source code and use the elixir/nerves commands to flash the card
+8. boot the RPi3
+9. Verify the smartphone connectivity. Select gazer access point and connect to 192.168.3.1
+10. install "GPSd Forwarder" from Play Store and turn it on
+11. Enjoy a star gazing night !
