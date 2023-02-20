@@ -27,8 +27,9 @@ The system is composed of the following components:
 	*  provides a full blown version of the NGC catalog and solar system object positions
 * User's Smartphone
 	* The user needs to install the "GPSd Forwarder" app -- opensource and available on Google Play Store -- therefore only Android phones are currently supported, however a flutter app is in the plans which will support both Android and IOS devices. No schedule available at the moment.
-	* Any web browser to display the GUI
+	* Any mobile web browser to display the GUI
 
+![gazer block diagram](schema.jpg)
 More information on each component is provided in the respective folders.
 
 ## What's still to be completed - work in progress
@@ -49,3 +50,6 @@ More information on each component is provided in the respective folders.
 8. Verify the smartphone connectivity. Select gazer access point and connect to 192.168.3.1
 9. install "GPSd Forwarder" from Play Store and turn it on
 10. Enjoy a star gazing night !
+
+## License
+the project is released under GPLv3 License (the dependencies have their own licences)
