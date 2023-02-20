@@ -52,4 +52,4 @@ More information on each component is provided in the respective folders.
 10. Enjoy a star gazing night !
 
 ## License
-the project is released under GPLv3 License (the dependencies have their own licences)
+the project is released under AGPLv3 License (the dependencies have their own licences)
