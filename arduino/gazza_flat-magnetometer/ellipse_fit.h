@@ -6,6 +6,8 @@
  * from the github-repo above. Download the file ellipse_fit.cpp and
  * place it under the sketch subfolder src/ellipse-fitting/ellipse-fit.cpp
  * 
+ * check https://github.com/seisgo/EllipseFit which is MIT license
+ * 
  ************/
 #ifndef ELLIPSE_FIT_H
 #define ELLIPSE_FIT_H

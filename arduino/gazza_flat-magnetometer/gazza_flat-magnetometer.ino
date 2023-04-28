@@ -23,6 +23,7 @@
 #include "compass.h"
 #include "calibration.h"
 
+int counter = 0;
 
 int LOOP_RATE_HZ;
 unsigned long last_loop_time = millis();
@@ -34,6 +35,7 @@ unsigned long last_calibration_time = millis();
 unsigned long kLoopIntervalMs;
 unsigned long magLoopIntervalMs;
 unsigned long accelLoopIntervalMs;
+const unsigned long kPrintIntervalMs = 1000;
 
 bool calib_complete = false;
 bool calib_on = false;        // true if calibration data collection is in progress
@@ -72,39 +74,43 @@ void setup() {
 }
 
 void checkSerial();
+void checkSerial1();
 
 void loop() {
   unsigned long timestamp = millis();
 
-  if ((timestamp - last_accel_read) >= accelLoopIntervalMs) {
-    last_accel_read = timestamp;
-    accel_readings(acc);
-    elevation(acc[0], acc[2], altitude);
-  }
-  if ((timestamp - last_mag_read) >= magLoopIntervalMs) {
-    last_mag_read = timestamp;
-    mag_readings(mag);
-    if(calib_on & ((timestamp - last_calibration_time) >= calibration_interval)) {
-      last_calibration_time = timestamp;
-      int to_go = add_sample(mag[0], mag[1]);
-      if(!to_go){
-        calib_on = false;
-        calib_complete = true;
-        Serial.println("calibration completed");
-        Serial1.println("calibration completed");  // notify raspberry
-      }
-      Serial.print("+++++++ MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.print(mag[2]);Serial.print(" \ttogo ");Serial.println(to_go);
-    } else {
-      calibrate(mag[0], mag[1], mag[2]);
-      flatCompass(mag[0], mag[1], mag[2], azimuth);
-    }
-  }
-
   if ((timestamp - last_loop_time) >= kLoopIntervalMs) {
-    last_loop_time = timestamp;
-    snprintf(output_str, MAX_LEN_OUT_BUF, "SENSORS, AZ, %+3.3f, ALT, %+3.3f,", azimuth, altitude);
-    Serial.println(output_str);  //simplest way to see library output
-    Serial1.println(output_str); //simplest way to see library output
+    accel_readings(acc);  // vertical sensor, if it is flat call with accel_readings(acc, true);
+    mag_readings(mag);
+    altitude = elevation(acc[0], acc[2]);
+    counter +=1;
+    if(calib_on & ((timestamp - last_calibration_time) >= calibration_interval)) {
+        last_calibration_time = timestamp;
+        int to_go = add_sample(mag, acc);
+        if(!to_go) {
+            calib_on = false;
+            calib_complete = true;
+            Serial.println("calibration completed");
+            Serial1.println("calibration completed");  // notify raspberry
+        } else {
+            Serial.print("PROCESSED MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.print(mag[2]);
+            Serial.print(" \tAX ");Serial.print(acc[0]);Serial.print(" \tAY ");Serial.print(acc[1]);Serial.print(" \tAZ ");Serial.print(acc[2]);
+            Serial.print(" \tI ");Serial.print(counter);Serial.print(" \ttogo ");Serial.println(to_go);
+        }
+    } else {
+        if (calib_complete) {
+            calibrate(mag, acc);
+            Serial.print("CALIBRATED MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.print(mag[2]);Serial.print(" \tI ");Serial.println(counter);
+        }
+        flatCompass(mag[0], mag[1], mag[2], azimuth);
+        Serial.print("Compass -- ALT ");Serial.print(altitude*RadToDeg);Serial.print("\tazimuth ");Serial.println(azimuth*RadToDeg);  // azimuth and alt should better be in the same unit: ° or rad
+    }
+    if ((timestamp - last_loop_time) >= kLoopIntervalMs) {
+      last_loop_time = timestamp;
+      snprintf(output_str, MAX_LEN_OUT_BUF, "SENSORS, AZ, %+3.3f, ALT, %+3.3f,", azimuth*RadToDeg, altitude*RadToDeg);
+      Serial.println( output_str );  //simplest way to see library output
+      Serial1.println( output_str ); //simplest way to see library output
+    }
   }
   checkSerial();
   checkSerial1();

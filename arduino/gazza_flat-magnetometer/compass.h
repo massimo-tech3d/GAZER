@@ -11,25 +11,30 @@
 #define RadToDeg 57.295779F
 #include "SimpleKalmanFilter.h"
 
-SimpleKalmanFilter kf_azimuth = SimpleKalmanFilter(1, 1, 0.1);  // best parameters to be fine tuned
+#define K_ERR_AZ 0.05   // kalman filter error estimate - value defined observing plots of raw mag axis reading and kalman smoothed - sensor specific
+#define K_Q_AZ   0.1   // kalman filter process variance - value defined observing plots of raw mag axis reading and kalman smoothed - sensor specific
 
-/*
- * for some reason the kalman filter may not be used for acceletometer readings (altitude)
- * it simply does not work. It adds some 5/6° to 0° altitude and reduces by even 10/15° the 90° altitude.
- * Don't know why, but this is it
- */
-//SimpleKalmanFilter kf_altitude = SimpleKalmanFilter(10, 1, 0.001);  // best parameters to be fine tuned
+#define K_ERR_ALT 0.1   // kalman filter error estimate - value defined observing plots of raw mag axis reading and kalman smoothed - sensor specific
+#define K_Q_ALT    2.0   // kalman filter process variance - value defined observing plots of raw mag axis reading and kalman smoothed - sensor specific
 
-/*
- * The values Bx and By are tilt compensated after the execution
- * Bz is just ignored because the scope cannot Roll, any Bz value other than 0 is just noise
- */
+SimpleKalmanFilter kf_azimuth = SimpleKalmanFilter(K_ERR_AZ, K_ERR_AZ, K_Q_AZ);
+SimpleKalmanFilter kf_altitude = SimpleKalmanFilter(K_ERR_ALT, K_ERR_ALT, K_Q_ALT);
+
+float norm_2PI(float angle);
+
 void flatCompass(float Bx, float By, float Bz, float &yaw) {
-    yaw = atan2(By, Bx) * RadToDeg + 180;
+    yaw = norm_2PI(atan2(By, Bx));
     yaw = kf_azimuth.updateEstimate(yaw);
 }
 
-void elevation(float Gx, float Gz, float &pitch) {
-//  pitch = kf_azimuth.updateEstimate(atan2(Gx, Gz) * RadToDeg);
-  pitch = atan2(Gx, Gz) * RadToDeg;
+
+float elevation(float Gx, float Gz) {
+  float pitch = atan2(Gx, Gz);
+  pitch = kf_altitude.updateEstimate(pitch);
+  return pitch;
+}
+
+float norm_2PI(float angle) {
+  float PI_2 = 2*PI;
+  return fmod(PI_2 + fmod(angle, PI_2), PI_2);
 }

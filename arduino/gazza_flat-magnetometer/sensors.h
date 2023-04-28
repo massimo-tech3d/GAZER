@@ -10,9 +10,9 @@
 #include "LIS3MDL.h"
 #include "FXOS_8700.h"
 
-//Adafruit_LIS3MDL magnet;
-//Adafruit_FXOS8700 accel; // = Adafruit_FXOS8700(0x8700A, -1);  // Accelerometer
-//Adafruit_FXOS8700 comb_mag; // = Adafruit_FXOS8700(0x8700A, 0x8700B);
+Adafruit_LIS3MDL magnet;
+Adafruit_FXOS8700 accel; // = Adafruit_FXOS8700(0x8700A, -1);  // Accelerometer
+Adafruit_FXOS8700 comb_mag; // = Adafruit_FXOS8700(0x8700A, 0x8700B);
 
 bool combo = false;
 float ACCEL_DATARATE = ACCEL_DATARATE_FXOS_SINGLE;
@@ -26,7 +26,7 @@ bool sensors() {
       return true;
     }
   } else {                        // failed to init the single magnetometer
-    if(init_accelmag()) {          // tries to initialize the combined sensors
+    if(init_sensors()) {          // tries to initialize the combined sensors
       Serial.println("FXOS Combo Found");
       combo = true;
       ACCEL_DATARATE = ACCEL_DATARATE_FXOS_COMBO;
