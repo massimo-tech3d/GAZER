@@ -10,7 +10,7 @@ For testing purposes calibration can also be initiated from arduino IDE console 
 
 ### Supported MEMS are:
 * Magnetometers: ST LIS3MDL (reccommended), NXP FXOS_8700
-* Accelerometer: NXP FXOS_8700
+* Accelerometer: NXP MMA8451 (reccommended), NXP FXOS_8700
 
 Note: the FOXS_8700 combines magnetometer and accelerometer on the same chip. For use with the gazza-flat-magnetometer sketch you'd need to use two of these chips because the two sensors must be mounted in diferent positions.
 
