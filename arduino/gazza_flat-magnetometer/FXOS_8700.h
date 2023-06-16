@@ -34,7 +34,7 @@
 //#define AF_ACCEL_MG_LSB_2G (0.000244F)  // Adafruit approximated number
 //#define ACCURACY_RATIO AF_ACCEL_MG_LSB_2G/ACCEL_MG_LSB_2G
 
-#define ACC_DATARATE ODR_12_5HZ  // adafruit dice essere il top per la precisione...
+#define ACC_DATARATE_FX ODR_12_5HZ  // adafruit dice essere il top per la precisione...
 #define COMBO_DATARATE ODR_12_5HZ
 // possible values ODR_6_25HZ ODR_12_5HZ 200HZ ODR_25HZ ODR_50HZ ODR_100HZ ODR_200HZ ODR_400HZ
 
@@ -43,7 +43,7 @@
 #define MAG_DATARATE_FXOS_COMBO  200
 
 Adafruit_FXOS8700 fxos;           //  = Adafruit_FXOS8700(0x8700A, 0x8700B);
-Adafruit_FXOS8700 accelerometer;  //  = Adafruit_FXOS8700(0x8700A, -1);
+Adafruit_FXOS8700 accelerometer_FX;  //  = Adafruit_FXOS8700(0x8700A, -1);
 
 SimpleKalmanFilter kf_ax = SimpleKalmanFilter(K_ERR_A, K_ERR_A, K_Q_A);
 SimpleKalmanFilter kf_ay = SimpleKalmanFilter(K_ERR_A, K_ERR_A, K_Q_A);
@@ -53,30 +53,30 @@ SimpleKalmanFilter kf_mx = SimpleKalmanFilter(K_ERR_M, K_ERR_M, K_Q_M);
 SimpleKalmanFilter kf_my = SimpleKalmanFilter(K_ERR_M, K_ERR_M, K_Q_M);
 SimpleKalmanFilter kf_mz = SimpleKalmanFilter(K_ERR_M, K_ERR_M, K_Q_M);
 
-bool init_sensors(void) {
-  fxos = Adafruit_FXOS8700(0x8700A, 0x8700B);
-  if (!fxos.begin()) {
-    return false;
-  }
-  fxos.setSensorMode(HYBRID_MODE);
-  fxos.setAccelRange(ACCEL_RANGE_2G);
-  fxos.setMagOversamplingRatio(MAG_OSR_7);
-  fxos.setOutputDataRate(COMBO_DATARATE);  // 400HZ
-  return true; 
-}
+//bool init_sensors(void) {
+//  fxos = Adafruit_FXOS8700(0x8700A, 0x8700B);
+//  if (!fxos.begin()) {
+//    return false;
+//  }
+//  fxos.setSensorMode(HYBRID_MODE);
+//  fxos.setAccelRange(ACCEL_RANGE_2G);
+//  fxos.setMagOversamplingRatio(MAG_OSR_7);
+//  fxos.setOutputDataRate(COMBO_DATARATE);  // 400HZ
+//  return true; 
+//}
 
-bool init_accelerometrer(void) {
-  accelerometer = Adafruit_FXOS8700(0x8700A, -1);
-  if (!accelerometer.begin()) {
+bool init_accelerometer_FX(void) {
+  accelerometer_FX = Adafruit_FXOS8700(0x8700A, -1);
+  if (!accelerometer_FX.begin()) {
     return false;
   }
-  accelerometer.setSensorMode(ACCEL_ONLY_MODE);
-  accelerometer.setAccelRange(ACCEL_RANGE_2G);
-  accelerometer.setOutputDataRate(ACC_DATARATE);         // slowest possible data rate for stable ACC readings is 3.125 but too slow for the loop
+  accelerometer_FX.setSensorMode(ACCEL_ONLY_MODE);
+  accelerometer_FX.setAccelRange(ACCEL_RANGE_2G);
+  accelerometer_FX.setOutputDataRate(ACC_DATARATE_FX);         // slowest possible data rate for stable ACC readings is 3.125 but too slow for the loop
   return true;
 }
 
-void axes(float raw[3], bool flat) {
+void axes_FX(float raw[3], bool flat) {
   float x = raw[0];  // front direction
   float y = raw[1];  // left direction
   float z = raw[2];  // up direction
@@ -94,19 +94,15 @@ void axes(float raw[3], bool flat) {
   }
 }
 
-void accel_readings(bool combo, float accel_raw[3], bool flat=false) {
+void accel_readings_FX(float accel_raw[3], bool flat=false) {
   sensors_event_t aevent, mevent;
 
-  if(combo){
-    fxos.getEvent(&aevent, &mevent);
-  } else {
-    accelerometer.getEvent(&aevent, &mevent);
-  }
+  accelerometer_FX.getEvent(&aevent, &mevent);
   accel_raw[0] = aevent.acceleration.x;
   accel_raw[1] = aevent.acceleration.y;
   accel_raw[2] = aevent.acceleration.z;
 
-  axes(accel_raw, flat);
+  axes_FX(accel_raw, flat);
 }
 
 void mag_readings_FX(float mag_raw[3], bool flat=false) {
@@ -117,5 +113,5 @@ void mag_readings_FX(float mag_raw[3], bool flat=false) {
   mag_raw[1] = mevent.magnetic.y;
   mag_raw[2] = mevent.magnetic.z;
 
-  axes(mag_raw, flat); // no need to swap axes (perchè ho messo questa nota ?
+  axes_FX(mag_raw, flat); // no need to swap axes (perchè ho messo questa nota ?
 }

@@ -27,7 +27,6 @@ void flatCompass(float Bx, float By, float Bz, float &yaw) {
     yaw = kf_azimuth.updateEstimate(yaw);
 }
 
-
 float elevation(float Gx, float Gz) {
   float pitch = atan2(Gx, Gz);
   pitch = kf_altitude.updateEstimate(pitch);

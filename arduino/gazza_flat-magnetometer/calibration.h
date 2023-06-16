@@ -1,17 +1,22 @@
-/************
- * Magnetometer calibration algorithm
+/* 
+ *  Calibration of flat magnetometer
+ *  1- collection of magnetometer samples by turning the telescope 360° forth and back
+ *  2- intepolates the ellipse best fitting the samples (by calling the irons() function)
+ *  3- fills the module global variables
+ *   - alfa, beta --> offsets of ellipse center --> Hard Iron
+ *   - sigma --> ratio between axes -- how far from a circle is actually the ellipse
+ *   - R[4] --> rotation matrix defining the angle between major axis and x axis
+ *   - RI[4] --> inverse of R[]
  *  
- * Created by Massimo Tasso, January, 1, 2023
- * 
- * Ellipse fitting algorithm from
- * https://github.com/mericdurukan/ellipse-fitting
- * 
- * Created by Massimo Tasso, January, 1, 2023
- * Released under GPLv3 License - see LICENSE file for details.
- ************/
-#include "ellipse_fit.h"
-//#include <vector>
-//#include "vectors.h"
+ *  after having calculated the parameters above, every sample can be calibrated by the following sequence:
+ *  A- Correcting the HARD IRON offset
+ *  B- Applying the SOFT IRON rotation - this is necessary so the following rescaling does not defom the shape
+ *  C- Applying the SOFT IRON rescaling
+ *  D- Applying the SOFT IRON derotation
+ */
+
+#include "irons.h"
+#include <vector>
 
 #define SAMPLES 500  // 1000
 #define NUMBEROFAXIS 3
@@ -22,14 +27,17 @@
 vector<vector<double>> samples;
 int last_entry = 0;
 
-double alfa = 1;   // ellipse -  x axis
-double beta = 1;   // ellipse -  y axis
-double sigma = 1;  // ellipse -  scale factor
+double alfa = 1;      // ellipse -  x axis
+double beta = 1;      // ellipse -  y axis
+double sigma = 1;     // ellipse -  scale factor
+double my_alfa = 1;   // ellipse -  x axis
+double my_beta = 1;   // ellipse -  y axis
 
 float R[4] = {1, 0, 0, 1};
 float RI[4] = {1, 0, 0, 1};
 
-ellipse_fit ellipse;
+// TESTING -- CAN BE DELETED and uncomment declarations in calculateIrons
+double phi, a_axis, b_axis;
 
 void init_cal() {
   samples.resize(SAMPLES , vector<double>(2, 0));
@@ -40,31 +48,22 @@ long init_cal(int duration) {
   return (long)(duration / SAMPLES);
 }
 
-void printSoftIron();
+void printIrons();
 
 /**
- * Ellipse fitting function
- * 
- * uses the global samples array of x, y, z values to fit the points to an ellipse 
- * and calculates the following global variables:
- * 
- * alpha and beta - ellipse center offsets
- * sigma - deformation factor to transform to a circle
- * R - rotation matrix to derotate the ellipse
- * RI - rotation matrix to counter derotate the ellipse
- * 
- * https://github.com/mericdurukan/ellipse-fitting
+ * Calculates the HI/SI parameters from the samples array
+ * results:
+ *   alpha and beta - ellipse center offsets / Hard Iron offsets
+ *   sigma - deformation factor to transform to a circle
+ *   R - rotation matrix to derotate the ellipse
+ *   RI - rotation matrix to counter derotate the ellipse
  */
- void fit(){
-  double center_x, center_y, phi, width, height;
-  ellipse.set(samples);
-  Serial.println("Fitting ellipse");
-  ellipse.fit(center_x, center_y, phi, width, height);
-  Serial.println("Ellipse fitted");
-  alfa = center_x;
-  beta = center_y;
+ void calculateIrons(){
+//  double phi, a_axis, b_axis;
 
-  sigma = width/height;
+// the angle phi is returned in radians
+  irons(samples, alfa, beta, phi, a_axis, b_axis);
+  sigma = a_axis/b_axis;
 
   float sint = sin(phi);
   float cost = cos(phi);
@@ -82,15 +81,8 @@ void printSoftIron();
 
 
 /**
- * During the calibration phase adds a new sample to the list of the point to calculate the ellipse fitting to a circle
- * After enough points have been added, initiates the actual ellipse fitting
- * 
- * The fitting is stored in the following module global variables:
- * 
- * alpha and beta - ellipse center offsets
- * sigma - deformation factor to transform to a circle
- * R - rotation matrix to derotate the ellipse
- * RI - rotation matrix to counter derotate the ellipse
+ * During the calibration phase adds a new sample to the samples vector necessary to calculate the ellipse fitting to a circle
+ * After enough points have been added, initiates the actual ellipse fitting and HI/SI parameters (calculateIrons)
  */
 int add_sample(float *mag, float *acc) {
   Serial.print("addsample -- \tx: ");Serial.print(mag[0]);Serial.print("\ty: ");Serial.print(mag[1]);Serial.print("\tz: ");Serial.println(mag[2]);
@@ -103,45 +95,31 @@ int add_sample(float *mag, float *acc) {
     last_entry++;
     return SAMPLES - last_entry +1;
   } else {
-    Serial.println("FITTING");
-    fit();  // calculates the calibration after the last sample has been collected
-    Serial.println("FITTING COMPLETED");
-    printSoftIron();
+    calculateIrons();
+    printIrons();
     return 0;
   }
 }
 
 /**
- * flattens the magnetometer reading and performs its calibration
+ * flattens the magnetometer reading and returns the calibrated reading
  */
 void calibrate(float *mag, float *acc) {
-//  Serial.println("calibrate - flattening***");
-//  flatten(mag, acc);
-//  Serial.println("calibrate - flattened***");
-//  Serial.print("AFTER FLATTEN MX\t");Serial.print(x);Serial.print("\tMY ");Serial.print(y);Serial.print("\tMZ ");Serial.println(z);
-
-  Serial.print("calibrate - BEFORE HARD IRON MX\t");Serial.print(mag[0]);Serial.print("\tMY ");Serial.print(mag[1]);Serial.print("\tMZ ");Serial.println(mag[2]);
-  // DOING HARD IRON
+  // APPLY HARD IRON OFFSET
   float Cx = mag[0] - (float) alfa;
   float Cy = mag[1] - (float) beta;
-  Serial.print("calibrate - HARD IRON MX\t");Serial.print(Cx);Serial.print("\tMY ");Serial.print(Cy);Serial.print("\tMZ ");Serial.println(mag[2]);
 
-  // DOING SOFT IRON ROTATION
+  // APPLY SOFT IRON ROTATION
   float rotx = Cx*R[0] + Cy*R[1];  // v(Bx By) * R
-  float roty = Cx*R[2] + Cy*R[3];  // ruota
-  Serial.print("calibrate - SOFT IRON ROTATED MX\t");Serial.print(rotx);Serial.print("\tMY ");Serial.print(roty);Serial.print("\tMZ ");Serial.println(mag[2]);
+  float roty = Cx*R[2] + Cy*R[3];  // rotates
 
-  // DOING SOFT IRON RESCALING
-  float scalx = rotx / (float) sigma;   // scala
+  // APPLY SOFT IRON RESCALING
+  float scalx = rotx / (float) sigma;   // scales
   float scaly = roty;
-  Serial.print("calibrate - SOFT IRON RESCALED MX\t");Serial.print(scalx);Serial.print("\tMY ");Serial.print(scaly);Serial.print("\tMZ ");Serial.println(mag[2]);
 
-  // DOING SOFT IRON REROTATION
+  // APPLY SOFT IRON REROTATION
   float derotx = scalx*RI[0] + scaly*RI[1];  // v(xy) * RI
-  float deroty = scalx*RI[2] + scaly*RI[3];  // deruota
-//  Bx = x;  // v(xy) * RI
-//  By = y;  // deruota
-  Serial.print("calibrate - SOFT IRON REROTATED MX\t");Serial.print(derotx);Serial.print("\tMY ");Serial.print(deroty);Serial.print("\tMZ ");Serial.println(mag[2]);
+  float deroty = scalx*RI[2] + scaly*RI[3];  // derotates
   mag[0] = derotx;
   mag[1] = deroty;
 }
@@ -154,8 +132,28 @@ float getBeta(){
   return beta;
 }
 
-void printSoftIron() {
+void printIrons() {
+  Serial.println("IRON HI/SI");
+  Serial.print("alfa ");Serial.print(alfa);Serial.print(" beta ");Serial.println(beta);
   Serial.print("[");Serial.print(R[0]);Serial.print(" ");Serial.println(R[1]);
   Serial.print(" ");Serial.print(R[2]);Serial.print(" ");Serial.print(R[3]),Serial.println("]");
   Serial.print("Sigma ");Serial.println(sigma);
+}
+
+// TESTING FUNCTIONS ONLY -- CAN BE DELETED
+
+void SendSamples() {
+  for(int i=0; i<SAMPLES; i++){
+    Serial.print("SAMPLE,");Serial.print(samples[i][0]);Serial.print(",");Serial.println(samples[i][1]);
+  }
+  Serial.println("END,");
+}
+
+void SendEllipse(){
+  Serial.print("ALFA,");Serial.println(alfa);
+  Serial.print("BETA,");Serial.println(beta);
+  Serial.print("A_AXIS,");Serial.println(a_axis);
+  Serial.print("B_AXIS,");Serial.println(b_axis);
+  Serial.print("PHI,");Serial.println(phi);
+  Serial.println("END,");
 }

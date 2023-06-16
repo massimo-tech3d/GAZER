@@ -62,7 +62,7 @@ void mag_readings_LIS(float mag_raw[3]) {
   
     magnetometer.getEvent(&mevent);
     mag_raw[0] = kf_x.updateEstimate(mevent.magnetic.x);
-    mag_raw[1] = kf_x.updateEstimate(mevent.magnetic.y);
-    mag_raw[2] = kf_x.updateEstimate(mevent.magnetic.z);
+    mag_raw[1] = kf_y.updateEstimate(mevent.magnetic.y);
+    mag_raw[2] = kf_z.updateEstimate(mevent.magnetic.z);
     mag_axes(mag_raw);
 }

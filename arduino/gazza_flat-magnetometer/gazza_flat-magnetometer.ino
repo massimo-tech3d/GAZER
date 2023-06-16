@@ -135,9 +135,13 @@ void processCommand(String command){
       int duration_in_seconds = seconds.toInt();
       calibration_interval = init_cal(duration_in_seconds * 1000); // result in milliseconds for 1000 calibration readings
     }
+  } else if(command=="samples") {
+    SendSamples();
+  } else if(command=="ellipse") {
+    SendEllipse();    
   } else if(command=="show") {  // start accelerometer calibration
     Serial.print("Offset X: ");Serial.print(getAlfa());Serial.print(" Offset Y: ");Serial.println(getBeta());
-    printSoftIron();
+    printIrons();
   } else {
     Serial.println(command);Serial.println("To Serial: UNRECOGNIZED COMMAND");
     Serial1.println("To Serial1: UNRECOGNIZED COMMAND");
