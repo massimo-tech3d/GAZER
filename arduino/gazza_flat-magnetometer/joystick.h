@@ -21,6 +21,7 @@
 #define MILD_B 400
 #define STRONG_B 50
 
+#define DENOISE_DELAY 5
 
 // prevoius sensor values, per non rimandare sempre lo stesso dato
 // mi occorre qua in scopo globale per non reinizializzarli ad ogni iterazione
@@ -33,8 +34,22 @@ void initJoystick(){
   pinMode(JOYSTICK_BUTTON, INPUT_PULLUP);
   pinMode(JOYSTICK_X, INPUT_PULLUP);
   pinMode(JOYSTICK_Y, INPUT_PULLUP);
-//  pinMode(LED_BUILTIN,OUTPUT); 
   delay(10);
+}
+
+bool debounce(int btn) {
+  static uint16_t state = 0;
+  state = (state<<1) | digitalRead(btn) | 0xfe00;
+  return (state == 0xff00);
+}
+
+bool denoise(int btn) {
+  if(!digitalRead(btn)) {  // digitalRead = false when joy button pressed
+    delay(DENOISE_DELAY);
+    if(!digitalRead(btn))  // if joy button reading confirmed after DENOISE_DELAY millis
+      return true;
+  }
+  return false;
 }
 
 String handleJoystick(){
@@ -44,7 +59,9 @@ String handleJoystick(){
     last_j_read = millis();
     int x = analogRead(JOYSTICK_X);
     int y = analogRead(JOYSTICK_Y);
-    int button = !digitalRead(JOYSTICK_BUTTON);
+//    int button = !digitalRead(JOYSTICK_BUTTON);
+    bool button = debounce(JOYSTICK_BUTTON);  // compare this with next one. This should be preferred if it works
+//    bool button = denoise(JOYSTICK_BUTTON);
     String j_out = "";
   
     if(x > STRONG_R)
