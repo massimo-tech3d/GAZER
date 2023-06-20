@@ -43,15 +43,6 @@ bool debounce(int btn) {
   return (state == 0xff00);
 }
 
-bool denoise(int btn) {
-  if(!digitalRead(btn)) {  // digitalRead = false when joy button pressed
-    delay(DENOISE_DELAY);
-    if(!digitalRead(btn))  // if joy button reading confirmed after DENOISE_DELAY millis
-      return true;
-  }
-  return false;
-}
-
 String handleJoystick(){
   if((millis() - last_j_read) < JOYSTICK_INTERVAL_MILLIS) {
     return "";
@@ -59,9 +50,7 @@ String handleJoystick(){
     last_j_read = millis();
     int x = analogRead(JOYSTICK_X);
     int y = analogRead(JOYSTICK_Y);
-//    int button = !digitalRead(JOYSTICK_BUTTON);
     bool button = debounce(JOYSTICK_BUTTON);  // compare this with next one. This should be preferred if it works
-//    bool button = denoise(JOYSTICK_BUTTON);
     String j_out = "";
   
     if(x > STRONG_R)
