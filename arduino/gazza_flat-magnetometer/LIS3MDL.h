@@ -13,12 +13,12 @@
 #define MAG_DATARATE_STRING LIS3MDL_DATARATE_155_HZ  // adafruit dice essere il top per la precisione...
 #define MAG_DATARATE_LIS3MDL 155
 
-#define K_ERR 0.08   // kalman filter error estimate - value defined observing plots of raw mag axis reading and kalman smoothed
-#define K_Q   0.01   // kalman filter process variance - value defined observing plots of raw mag axis reading and kalman smoothed
+#define K_ERR_M 0.08   // kalman filter error estimate - value defined observing plots of raw mag axis reading and kalman smoothed
+#define K_Q_M   0.01   // kalman filter process variance - value defined observing plots of raw mag axis reading and kalman smoothed
 
-SimpleKalmanFilter kf_x = SimpleKalmanFilter(K_ERR, K_ERR, K_Q);
-SimpleKalmanFilter kf_y = SimpleKalmanFilter(K_ERR, K_ERR, K_Q);
-SimpleKalmanFilter kf_z = SimpleKalmanFilter(K_ERR, K_ERR, K_Q);
+SimpleKalmanFilter kf_x = SimpleKalmanFilter(K_ERR_M, K_ERR_M, K_Q_M);
+SimpleKalmanFilter kf_y = SimpleKalmanFilter(K_ERR_M, K_ERR_M, K_Q_M);
+SimpleKalmanFilter kf_z = SimpleKalmanFilter(K_ERR_M, K_ERR_M, K_Q_M);
 
 Adafruit_LIS3MDL magnetometer;
 
@@ -61,8 +61,11 @@ void mag_readings_LIS(float mag_raw[3]) {
     sensors_event_t mevent;
   
     magnetometer.getEvent(&mevent);
-    mag_raw[0] = kf_x.updateEstimate(mevent.magnetic.x);
-    mag_raw[1] = kf_y.updateEstimate(mevent.magnetic.y);
-    mag_raw[2] = kf_z.updateEstimate(mevent.magnetic.z);
+//    mag_raw[0] = kf_x.updateEstimate(mevent.magnetic.x);
+//    mag_raw[1] = kf_y.updateEstimate(mevent.magnetic.y);
+//    mag_raw[2] = kf_z.updateEstimate(mevent.magnetic.z);
+    mag_raw[0] = mevent.magnetic.x;
+    mag_raw[1] = mevent.magnetic.y;
+    mag_raw[2] = mevent.magnetic.z;
     mag_axes(mag_raw);
 }

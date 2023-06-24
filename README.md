@@ -18,7 +18,7 @@ The system is composed of the following components:
 	* Calculation of Altitude and Azimuth
 	* Joystick movement readouts
 * a PCB to be populated with Teensy and Stepper Drivers and to plug-in sensors and joystick cables. The PCB is finally plugged in the RPi GPIO connector.
-* Raspberry Pi 3 hosts the Elixir code to
+* Raspberry Pi 3 hosts the Nerves/Elixir code to
 	*  control the stepper motors
 	*  read the data acquired by the Teensy microcontroller
 	*  execute the astronomical algorithms for aiming and tracking objects
@@ -34,7 +34,6 @@ More information on each component is provided in the respective folders.
 
 ## What's still to be completed - work in progress
 
-- [ ] Object selection, from the GUI, to aim at
 - [ ] Unit tests
 - [ ] Documentation
 - [ ] Flutter application as alternative to browser based GUI
@@ -46,10 +45,11 @@ More information on each component is provided in the respective folders.
 4. plug the teensy on the PCB socket
 5. plug the PCB onto the RPi3 GPIO
 6. flash the RPi3 card with the nerves image provided in raspberry folder. Or, if preferred, compile the source code and use the elixir/nerves commands to flash the card
-7. boot the RPi3
-8. Verify the smartphone connectivity. Select gazer access point and connect to 192.168.3.1
-9. install "GPSd Forwarder" from Play Store and turn it on
-10. Enjoy a star gazing night !
+7. connect sensors and motors to the RPi box
+8. boot the RPi3
+9. Verify the smartphone connectivity. Select gazer access point and connect to 192.168.3.1
+10. install "GPSd Forwarder" from Play Store and turn it on
+11. Enjoy a star gazing night !
 
 ## License
 the project is released under AGPLv3 License (the dependencies have their own licences)

@@ -10,12 +10,10 @@
  ******/
 
 #include <Adafruit_MMA8451.h>
-#include "SimpleKalmanFilter.h"
+//#include "SimpleKalmanFilter.h"
 
 #define K_ERR_A 0.01  // kalman filter error estimate - value defined observing plots of raw mag axis reading and kalman smoothed
 #define K_Q_A   0.05  // kalman filter process variance - value defined observing plots of raw mag axis reading and kalman smoothed
-#define K_ERR_M 0.08  // kalman filter error estimate - value defined observing plots of raw mag axis reading and kalman smoothed
-#define K_Q_M   0.01  // kalman filter process variance - value defined observing plots of raw mag axis reading and kalman smoothed
 
 #define ACCEL  0
 
