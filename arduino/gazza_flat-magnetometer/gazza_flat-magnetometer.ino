@@ -36,11 +36,11 @@ unsigned long last_calibration_time = millis();
 unsigned long kLoopIntervalMs;
 unsigned long magLoopIntervalMs;
 unsigned long accelLoopIntervalMs;
-const unsigned long kPrintIntervalMs = 10000;
+const unsigned long kPrintIntervalMs = 100;  // sensors sent to Raspberry at 10 Hz - sounds enough
 
 bool calib_complete = false;
 bool calib_on = false;        // true if calibration data collection is in progress
-unsigned long  calibration_interval = 100;
+unsigned long calibration_interval = 100;
 
 // Buffer for holding general text output
 #define MAX_LEN_OUT_BUF 130
@@ -71,20 +71,30 @@ void setup() {
   LOOP_RATE_HZ = min(MAG_DATARATE, ACCEL_DATARATE);
   magLoopIntervalMs = 1000 / MAG_DATARATE;
   accelLoopIntervalMs = 1000 / ACCEL_DATARATE;
-  kLoopIntervalMs = max(magLoopIntervalMs, accelLoopIntervalMs); 
+  kLoopIntervalMs = max(magLoopIntervalMs, accelLoopIntervalMs);
+  Serial.print("kLoopIntervalMs: ");Serial.println(kLoopIntervalMs);
 }
 
 void checkSerial();
 void checkSerial1();
 
 void loop() {
-  unsigned long timestamp = millis();
-
-  if ((timestamp - last_loop_time) >= kLoopIntervalMs) {
+    unsigned long timestamp = millis();
     accel_readings(acc);
     mag_readings(mag);
-    altitude = elevation(acc[0], acc[2]);
-    //counter +=1;
+    if ((timestamp - last_print_time) >= kPrintIntervalMs) {  // time to send compass to Raspberry
+        last_print_time = timestamp;
+        a_calibrate(acc);      // a_calibrate does not change acc values if they are still required to calibrate
+        if(calib_complete)
+            m_calibrate(mag);  // don't change mag values if they are still required to calibrate
+    
+        altitude = elevation(acc[0], acc[2]);
+        flatCompass(mag[0], mag[1], mag[2], azimuth);
+        
+        snprintf(output_str, MAX_LEN_OUT_BUF, "SENSORS, AZ, %+3.3f, ALT, %+3.3f,", azimuth*RadToDeg, altitude*RadToDeg);
+        Serial.println( output_str );  //simplest way to see library output
+        Serial1.println( output_str ); //simplest way to see library output
+    }
     if(calib_on & ((timestamp - last_calibration_time) >= calibration_interval)) {
         last_calibration_time = timestamp;
         int to_go = add_sample(mag, acc);
@@ -92,32 +102,16 @@ void loop() {
             calib_on = false;
             calib_complete = true;
             Serial.println("calibration completed");
-            Serial1.println("calibration completed");  // notify raspberry
         } else {
-            Serial.print("PROCESSED MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.print(mag[2]);
-            Serial.print(" \tAX ");Serial.print(acc[0]);Serial.print(" \tAY ");Serial.print(acc[1]);Serial.print(" \tAZ ");Serial.print(acc[2]);
-//            Serial.print(" \tI ");Serial.print(counter);Serial.print(" \ttogo ");Serial.println(to_go);
-            Serial.print(" \ttogo ");Serial.println(to_go);
+//dbg            Serial.print("PROCESSED MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.print(mag[2]);
+//dbg            Serial.print(" \tAX ");Serial.print(acc[0]);Serial.print(" \tAY ");Serial.print(acc[1]);Serial.print(" \tAZ ");Serial.print(acc[2]);
+//dbg            Serial.print(" \tI ");Serial.print(counter);Serial.print(" \ttogo ");Serial.println(to_go);
+            Serial.print(millis());Serial.print(" \tM Calibration togo ");Serial.println(to_go);
         }
-    } else {
-        if (calib_complete) {
-            m_calibrate(mag);
-//            Serial.print("CALIBRATED MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.print(mag[2]);Serial.print(" \tI ");Serial.println(counter);
-            Serial.print("CALIBRATED MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.println(mag[2]);
-        }
-        flatCompass(mag[0], mag[1], mag[2], azimuth);
-        Serial.print("Compass -- ALT ");Serial.print(altitude*RadToDeg);Serial.print("\tazimuth ");Serial.println(azimuth*RadToDeg);  // azimuth and alt should better be in the same unit: ° or rad
     }
-    if ((timestamp - last_loop_time) >= kLoopIntervalMs) {
-      last_loop_time = timestamp;
-      snprintf(output_str, MAX_LEN_OUT_BUF, "SENSORS, AZ, %+3.3f, ALT, %+3.3f,", azimuth*RadToDeg, altitude*RadToDeg);
-      Serial.print("*********** ");Serial.println( output_str );  //simplest way to see library output
-      Serial1.println( output_str ); //simplest way to see library output
-    }
-  }
-  checkSerial();
-  checkSerial1();
-  checkJoystick();
+    checkSerial();
+    checkSerial1();
+    checkJoystick();
 }
 
 /*
@@ -131,10 +125,12 @@ void loop() {
  * in the specified time
  */
 void processCommand(String command){
+  Serial.print("**** ");Serial.println(command);
   if(command.startsWith("m_calibration")) {  // start accelerometer calibration
     if(!calib_complete) {
       calib_on = true;
-      String seconds = command.substring(10, command.length());    // extract second word, which is duration in seconds, from command string
+      // NOTE: substring below from X, where X is the length (base 1) of the 1st word of command: m_calibration
+      String seconds = command.substring(13, command.length());    // extract second word, which is duration in seconds, from command string
       int duration_in_seconds = seconds.toInt();
       calibration_interval = init_cal(duration_in_seconds * 1000); // result in milliseconds for 1000 calibration readings
     }

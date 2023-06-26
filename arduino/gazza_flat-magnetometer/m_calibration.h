@@ -85,7 +85,7 @@ void printIrons();
  * After enough points have been added, initiates the actual ellipse fitting and HI/SI parameters (calculateIrons)
  */
 int add_sample(float *mag, float *acc) {
-  Serial.print("addsample -- \tx: ");Serial.print(mag[0]);Serial.print("\ty: ");Serial.print(mag[1]);Serial.print("\tz: ");Serial.println(mag[2]);
+//  Serial.print("addsample -- \tx: ");Serial.print(mag[0]);Serial.print("\ty: ");Serial.print(mag[1]);Serial.print("\tz: ");Serial.println(mag[2]);
   if(last_entry < SAMPLES) {
 //    Serial.println("addsample -- flattening");
 //    flatten(mag, acc);
