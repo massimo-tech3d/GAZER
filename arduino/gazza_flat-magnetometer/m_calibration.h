@@ -13,6 +13,9 @@
  *  B- Applying the SOFT IRON rotation - this is necessary so the following rescaling does not defom the shape
  *  C- Applying the SOFT IRON rescaling
  *  D- Applying the SOFT IRON derotation
+ * 
+ * Created by Massimo Tasso, January, 1, 2023
+ * Released under GPLv3 License - see LICENSE file for details.
  */
 
 #include "irons.h"
@@ -27,8 +30,10 @@
 vector<vector<double>> samples;
 int last_entry = 0;
 
-double alfa = 1;      // ellipse -  x axis
-double beta = 1;      // ellipse -  y axis
+//double alfa = 1;      // ellipse -  x axis
+//double beta = 1;      // ellipse -  y axis
+double alfa = 0;      // ellipse -  x axis
+double beta = 0;      // ellipse -  y axis
 double sigma = 1;     // ellipse -  scale factor
 double my_alfa = 1;   // ellipse -  x axis
 double my_beta = 1;   // ellipse -  y axis
@@ -39,12 +44,14 @@ float RI[4] = {1, 0, 0, 1};
 // TESTING -- CAN BE DELETED and uncomment declarations in calculateIrons
 double phi, a_axis, b_axis;
 
-void init_cal() {
-  samples.resize(SAMPLES , vector<double>(2, 0));
-}
+//void init_cal() {
+//  samples.resize(SAMPLES , vector<double>(2, 0));
+////  samples.resize(SAMPLES , vector<double>(NUMBEROFAXIS, 0));
+//}
 
 long init_cal(int duration) {
   samples.resize(SAMPLES , vector<double>(2, 0));
+//  samples.resize(SAMPLES , vector<double>(NUMBEROFAXIS, 0));
   return (long)(duration / SAMPLES);
 }
 
@@ -92,6 +99,9 @@ int add_sample(float *mag, float *acc) {
 //    Serial.println("addsample -- flattened");
     samples[last_entry][0] = mag[0];
     samples[last_entry][1] = mag[1];
+
+//    samples[last_entry][2] = mag[2];
+    
     last_entry++;
     return SAMPLES - last_entry +1;
   } else {
@@ -146,6 +156,7 @@ void printIrons() {
 void SendSamples() {
   for(int i=0; i<SAMPLES; i++){
     Serial.print("SAMPLE,");Serial.print(samples[i][0]);Serial.print(",");Serial.println(samples[i][1]);
+//    Serial.print("SAMPLE,");Serial.print(samples[i][0]);Serial.print(",");Serial.print(samples[i][1]);Serial.print(",");Serial.println(samples[i][2]);
   }
   Serial.println("END,");
 }

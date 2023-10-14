@@ -18,10 +18,13 @@
  * 
  * Xc = X * g + o
  * 
+ * Created by Massimo Tasso, July, 13, 2023
+ * Released under GPLv3 License - see LICENSE file for details.
  */
 
 //#define MAX_RANGE 4096     // when int readings 0..8192
-// quarter of fuill range (16384) because I'm not expecting more that 1g, the sensors records up to 2g, and I don't expect half of the range since the scope never gets reverted
+// quarter of fuill range (16384) because I'm not expecting more that 1g, the sensors records up to 2g
+// and I don't expect more than half the range since the scope never gets reverted
 
 #define MAX_RANGE 9.81       // when m/s^2 readings -9.81..9.81
 
@@ -30,27 +33,7 @@ float oZ = 0;  // offset Y
 float gX = 1;  // gain X
 float gZ = 1;  // gain Z
 
-float x0, x1, z0, z1;  // Readings x/z at 0g and 1g
-
-/*
- * Reads X / Z value when they should be 0g / 1g i.e. with scope in horizontal position
- */
-void read_horizontal_accel(){
-  float accel[3];
-  accel_readings(accel);
-  x0 = accel[0];
-  z1 = accel[2];
-}
-
-/*
- * Reads X / Z value when they should be 1g / 0g i.e. with scope in horizontal position
- */
-void read_vertical_accel(){
-  float accel[3];
-  accel_readings(accel);
-  x1 = accel[0];
-  z0 = accel[2];
-}
+float x0 = 0, x1 = 0, z0 = 0, z1 = 0;  // Readings x/z at 0g and 1g
 
 /*
  * Calculates the calibration from the readings on the two stop points: horizontal telescope and vertical telescope
@@ -60,6 +43,44 @@ void calc_a_calibration(){
   oZ = -z0;
   gX = MAX_RANGE / x1;
   gZ = MAX_RANGE / z1;
+}
+
+/*
+ * Reads X / Z value when they should be 0g / 1g i.e. with scope in horizontal position
+ */
+void read_horizontal_accel(){
+  float accel[3];
+  int iter = 5;
+  x0 = 0;
+  z1 = 0;
+  for(int i=0; i<5; i++){
+    accel_readings(accel);
+    x0 += accel[0];
+    z1 += accel[2];
+    delay(80);
+  }
+  x0 /= iter;
+  z1 /= iter;
+  calc_a_calibration();
+}
+
+/*
+ * Reads X / Z value when they should be 1g / 0g i.e. with scope in horizontal position
+ */
+void read_vertical_accel(){
+  float accel[3];
+  int iter = 5;
+  x1 = 0;
+  z0 = 0;
+  for(int i=0; i<5; i++){
+    accel_readings(accel);
+    x1 += accel[0];
+    z0 += accel[2];
+    delay(80);
+  }
+  x1 /= iter;
+  z0 /= iter;
+  calc_a_calibration();
 }
 
 /*

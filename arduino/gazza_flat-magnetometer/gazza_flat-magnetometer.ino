@@ -22,25 +22,27 @@
 #include "joystick.h"
 #include "compass.h"
 #include "m_calibration.h"
+#include "m_compensation.h"
 #include "a_calibration.h"
 
 //int counter = 0;
 
 int LOOP_RATE_HZ;
-unsigned long last_loop_time = millis();
-unsigned long last_mag_read = millis();
-unsigned long last_accel_read = millis();
-unsigned long last_print_time = millis();
-unsigned long last_calibration_time = millis();
-
 unsigned long kLoopIntervalMs;
 unsigned long magLoopIntervalMs;
 unsigned long accelLoopIntervalMs;
+
+unsigned long last_print_time = millis();
 const unsigned long kPrintIntervalMs = 100;  // sensors sent to Raspberry at 10 Hz - sounds enough
 
 bool calib_complete = false;
 bool calib_on = false;        // true if calibration data collection is in progress
+unsigned long last_calibration_time = millis();
 unsigned long calibration_interval = 100;
+
+bool compensation_on = false;        // true if compensation data collection is in progress
+unsigned long last_compensation_time = millis();
+unsigned long compensation_interval = 100;
 
 // Buffer for holding general text output
 #define MAX_LEN_OUT_BUF 130
@@ -51,10 +53,14 @@ float altitude = 0;
 float acc[3];
 float mag[3];
 
+float compensation_reference = 180.0;
+
+bool live = false;
+
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
-  Serial1.begin(115200);
+  Serial.begin(115200);   // Serial: Console
+  Serial1.begin(115200);  // Serial1: raspberry
   while(!Serial1) {
     delay(1);
   }
@@ -72,6 +78,8 @@ void setup() {
   magLoopIntervalMs = 1000 / MAG_DATARATE;
   accelLoopIntervalMs = 1000 / ACCEL_DATARATE;
   kLoopIntervalMs = max(magLoopIntervalMs, accelLoopIntervalMs);
+  Serial.print("MAG interval ms: ");Serial.println(magLoopIntervalMs);
+  Serial.print("ACC interval ms: ");Serial.println(accelLoopIntervalMs);
   Serial.print("kLoopIntervalMs: ");Serial.println(kLoopIntervalMs);
 }
 
@@ -82,30 +90,43 @@ void loop() {
     unsigned long timestamp = millis();
     accel_readings(acc);
     mag_readings(mag);
+    a_calibrate(acc);      // can call a_calibrate cause it does not change acc values if they are still uncalibrated
+    m_calibrate(mag);      // can call m_calibrate even if calibration is not completed
+    altitude = elevation(acc[0], acc[2]);
+    azimuth = flatCompass(mag[0], mag[1], mag[2]);
+    azimuth = m_compensate(azimuth, altitude);
+
     if ((timestamp - last_print_time) >= kPrintIntervalMs) {  // time to send compass to Raspberry
         last_print_time = timestamp;
-        a_calibrate(acc);      // a_calibrate does not change acc values if they are still required to calibrate
-        if(calib_complete)
-            m_calibrate(mag);  // don't change mag values if they are still required to calibrate
-    
-        altitude = elevation(acc[0], acc[2]);
-        flatCompass(mag[0], mag[1], mag[2], azimuth);
-        
-        snprintf(output_str, MAX_LEN_OUT_BUF, "SENSORS, AZ, %+3.3f, ALT, %+3.3f,", azimuth*RadToDeg, altitude*RadToDeg);
-        Serial.println( output_str );  //simplest way to see library output
+
+        snprintf(output_str, MAX_LEN_OUT_BUF, "SENSORS, AZ, %+3.3f, ALT, %+3.3f,", azimuth, altitude);
+        if(!calib_on) {
+            Serial.println( output_str );  //simplest way to see library output
+        }
         Serial1.println( output_str ); //simplest way to see library output
     }
+
+    if(compensation_on & ((timestamp - last_compensation_time) >= compensation_interval)) {
+        last_compensation_time = timestamp;
+        int to_go = add_compensation_sample(compensation_reference, altitude, azimuth);
+        if(!to_go) {
+          compensation_on = false;
+          Serial.println("M_CAL, compensation map completed");
+          Serial1.println("M_CAL, compensation map completed");
+        } else {
+          Serial.print(millis());Serial.print(" \tM Compensation togo ");Serial.println(to_go);
+        }
+    }
+    
     if(calib_on & ((timestamp - last_calibration_time) >= calibration_interval)) {
         last_calibration_time = timestamp;
         int to_go = add_sample(mag, acc);
         if(!to_go) {
             calib_on = false;
             calib_complete = true;
-            Serial.println("calibration completed");
+            Serial.println("M_CAL, points collected");
+            Serial1.println("M_CAL, points collected");
         } else {
-//dbg            Serial.print("PROCESSED MX\t");Serial.print(mag[0]);Serial.print(" \tMY ");Serial.print(mag[1]);Serial.print(" \tMZ ");Serial.print(mag[2]);
-//dbg            Serial.print(" \tAX ");Serial.print(acc[0]);Serial.print(" \tAY ");Serial.print(acc[1]);Serial.print(" \tAZ ");Serial.print(acc[2]);
-//dbg            Serial.print(" \tI ");Serial.print(counter);Serial.print(" \ttogo ");Serial.println(to_go);
             Serial.print(millis());Serial.print(" \tM Calibration togo ");Serial.println(to_go);
         }
     }
@@ -125,7 +146,6 @@ void loop() {
  * in the specified time
  */
 void processCommand(String command){
-  Serial.print("**** ");Serial.println(command);
   if(command.startsWith("m_calibration")) {  // start accelerometer calibration
     if(!calib_complete) {
       calib_on = true;
@@ -134,23 +154,52 @@ void processCommand(String command){
       int duration_in_seconds = seconds.toInt();
       calibration_interval = init_cal(duration_in_seconds * 1000); // result in milliseconds for 1000 calibration readings
     }
+  }  else if(command.startsWith("m_cal_to_horizontal")) {
+    compensation_on = true;
+    String seconds = command.substring(19, command.length());    // extract second word, which is duration in seconds, from command string
+    int duration_in_seconds = seconds.toInt();
+    compensation_interval = init_compensation(duration_in_seconds * 1000); // result in milliseconds for 1000 calibration readings
+
+    // calculates the azimuth at starting time (ALT=90°) which shall stay fixed
+    // note: azimut oscillates randomnly within an range hopefully less than 1°
+    // this is the precision limit of whole system. Compensation won't be more accurate.
+    mag_readings(mag);
+    m_calibrate(mag);      // can call m_calibrate even if calibration is not completed
+    float az = flatCompass(mag[0], mag[1], mag[2]);
+
+    compensation_reference = az;
   } else if(command=="a_calibration_h") {    // read accel calibration horizontal
     read_horizontal_accel();
-    calc_a_calibration();
     Serial.println("Acc cal horizontal reading acquired");
     Serial1.println("Acc cal horizontal reading acquired");
   } else if(command=="a_calibration_v") {    // read accel calibration vertical
     read_vertical_accel();
-    calc_a_calibration();
     Serial.println("Acc cal horizontal reading acquired");
     Serial1.println("Acc cal horizontal reading acquired");
-  } else if(command=="set_a_calibration") {
-    // String seconds = command.substring(10, command.length())
+  } else if(command.startsWith("set_a_calibration")) {
     float ox = 0;
     float oz = 0;
-    float gx = 0;
-    float gz = 0;
-    set_a_calibration(ox, oz, gx, gz);
+    float gx = 1;
+    float gz = 1;
+    int ParCount = 0;
+    String pars[4];
+    String a_cal_pars = command.substring(18, command.length());
+    while(ParCount < 4){
+      int idx = a_cal_pars.indexOf(',');
+      if(idx == -1) {
+        pars[ParCount] = a_cal_pars;
+        break;
+      } else {
+        pars[ParCount++] = a_cal_pars.substring(0, idx);
+        a_cal_pars = a_cal_pars.substring(idx+1);
+      }
+    }
+    ox = pars[0].toFloat();
+    gx = pars[1].toFloat();
+    oz = pars[2].toFloat();
+    gz = pars[3].toFloat();
+    Serial.print("OX: ");Serial.print(ox);Serial.print("\tGX: ");Serial.print(gx);Serial.print("\tOZ: ");Serial.print(oz);Serial.print("\tGZ: ");Serial.println(gz);
+    set_a_calibration(ox, gx, oz, gz);
     Serial.println("Acc calibration saved");
   } else if(command=="export_a_calibration") {
     float ox;
@@ -158,8 +207,8 @@ void processCommand(String command){
     float gx;
     float gz;
     export_a_calibration(ox, gx, oz, gz);
-    Serial.print("A_CAL, OX");Serial.print(ox);Serial.print(", OZ");Serial.print(oz);Serial.print(", GX");Serial.print(gx);Serial.print(", GZ");Serial.println(gz);
-    Serial1.print("A_CAL, OX");Serial.print(ox);Serial.print(", OZ");Serial.print(oz);Serial.print(", GX");Serial.print(gx);Serial.print(", GZ");Serial.println(gz);
+    Serial.print("A_CAL,OX,");Serial.print(ox);Serial.print(",GX,");Serial.print(gx);Serial.print(",OZ,");Serial.print(oz);Serial.print(",GZ,");Serial.println(gz);
+    Serial1.print("A_CAL, ");Serial1.print(ox);Serial1.print(", ");Serial1.print(gx);Serial1.print(", ");Serial1.print(oz);Serial1.print(", ");Serial1.println(gz);
   } else if(command=="print_a_cal") {
     print_a_cal();
   } else if(command=="samples") {
@@ -169,6 +218,8 @@ void processCommand(String command){
   } else if(command=="show_m_cal") {
     Serial.print("Offset X: ");Serial.print(getAlfa());Serial.print(" Offset Y: ");Serial.println(getBeta());
     printIrons();
+  } else if(command=="live") {
+    live = true;
   } else {
     Serial.println(command);Serial.println("To Serial: UNRECOGNIZED COMMAND");
     Serial1.println("To Serial1: UNRECOGNIZED COMMAND");

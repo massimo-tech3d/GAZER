@@ -1,21 +1,29 @@
-// Ellipse fitting algorithm explained here
-// http://www.juddzone.com/ALGORITHMS/least_squares_ellipse.html
-//
-// given a set of 2D magnetometer readings, calculates the best approximating ellipse and returns
-// the coefficients of its equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
-// from which it's easy to calculate:
-//      the center offset (Herd Iron)
-//      and the ratio of the two axes and rotation angle (complete Soft Iron)
-
-// Dependency on Arduino library: Bolder_Flight_Systems_Eigen
-// It is necessary to edit the file eigen.h to import Dense in addition to Core
-// 
-// Just append
-// #include "Eigen/Dense"
-// to the header file eigen.h
-//
-// NOTE: the requirement for eigen library poses limitations on the Arduino platform: ARM cpu is required
-//       it would be necessary to offload the irons calculation to an external platform in order to use an AVR Arduino
+/*
+ * 
+ * Ellipse fitting algorithm explained here
+ * http://www.juddzone.com/ALGORITHMS/least_squares_ellipse.html
+ *
+ * given a set of 2D magnetometer readings, calculates the best approximating ellipse and returns
+ * the coefficients of its equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
+ * from which it's easy to calculate:
+ *      the center offset (Herd Iron)
+ *      and the ratio of the two axes and rotation angle (complete Soft Iron)
+ *
+ * Dependency on Arduino library: Bolder_Flight_Systems_Eigen
+ * It is necessary to edit the file eigen.h to import Dense in addition to Core
+ * 
+ * Just append
+ * 
+ * #include "Eigen/Dense"
+ * 
+ * to the header file eigen.h
+ *
+ * NOTE: the requirement for eigen library poses limitations on the Arduino platform: ARM cpu is required
+ *       it would be necessary to offload the irons calculation to an external platform in order to use an AVR Arduino
+ *
+ * Created by Massimo Tasso, January, 1, 2023 except where otherwise stated.
+ * Released under GPLv3 License - see LICENSE file for details.
+ */
 
 #include "eigen.h"
 #include <iostream>

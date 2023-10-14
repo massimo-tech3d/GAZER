@@ -25,11 +25,12 @@ SimpleKalmanFilter kf_altitude = SimpleKalmanFilter(K_ERR_ALT, K_ERR_ALT, K_Q_AL
 
 float norm_2PI(float angle);
 
-void flatCompass(float Bx, float By, float Bz, float &yaw) {
-    yaw = norm_2PI(atan2(By, Bx));
+float flatCompass(float Bx, float By, float Bz) {
+    float yaw = norm_2PI(atan2(By, Bx));
 //dbg    Serial.print("Az,");Serial.print(yaw*RadToDeg);
     yaw = kf_azimuth.updateEstimate(yaw);
 //dbg    Serial.print(", kAz,");Serial.println(yaw*RadToDeg);
+    return yaw*RadToDeg;
 }
 
 float elevation(float Gx, float Gz) {
@@ -37,7 +38,10 @@ float elevation(float Gx, float Gz) {
 //dbg  Serial.print("Alt,");Serial.print(pitch*RadToDeg);
   pitch = kf_altitude.updateEstimate(pitch);
 //dbg  Serial.print(", kAlt,");Serial.println(pitch*RadToDeg);
-  return pitch;
+  if(isnan(pitch)){
+    Serial.print("Alt is NAN - Ax ");Serial.print(Gx);Serial.print( " Az ");Serial.print(Gz);
+  }
+  return pitch*RadToDeg;
 }
 
 float norm_2PI(float angle) {
