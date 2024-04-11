@@ -30,9 +30,9 @@ After everything is connected, and GPS position is reflected in the webapp, the 
 Now you can search for celestial objects to observe using one of the three widgets provided:
 
 #### Planet search
-	to find the Moon and the 8 planets (Pluto included) by name
+to find the Moon and the 8 planets (Pluto included) by name
 #### Deep Sky Object
-    by specifying the main characteristics (Magnitude, type of object etc.) of the object desired, a list of compatible objects will be provided for you to choose.
-	Objects lower than 15° from the horizon are considered not visible and will not be shown.
+by specifying the main characteristics (Magnitude, type of object etc.) of the object desired, a list of compatible objects will be provided for you to choose.
+Objects lower than 15° from the horizon are considered not visible and will not be shown.
 #### Deep Sky Object by catalogue and number
-	the full NGC and IC catalogues are included. For example NGC 1976 or M 42 will take you straight to the Orion Nebula.
+the full NGC and IC catalogues are included. For example NGC 1976 or M 42 will take you straight to the Orion Nebula.
