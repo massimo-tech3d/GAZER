@@ -1,0 +1,25 @@
+defmodule Ui.Repo do
+  use Ecto.Repo,
+    otp_app: :ui,
+    adapter: Ecto.Adapters.SQLite3
+
+    # .schema ngc
+    #     CREATE TABLE ngc(
+    #       "Name" TEXT,
+    #       "Type" TEXT,
+    #       "RA" TEXT,
+    #       "Dec" TEXT,
+    #       "Const" TEXT,
+    #       "MajAx" TEXT,
+    #       "MinAx" TEXT,
+    #       "PosAng" TEXT,
+    #       "V-Mag" TEXT,
+    #       "Hubble" TEXT,
+    #       "M" TEXT,
+    #       "NGC" TEXT,
+    #       "IC" TEXT,
+    #       "Common names" TEXT
+    #     );
+
+
+end

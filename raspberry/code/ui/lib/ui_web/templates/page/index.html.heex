@@ -1,0 +1,164 @@
+<script src="assets/vendor/NoSleep.js"></script>
+<div class="w-screen min-h-screen dark:bg-black">
+  <section class="dark:text-red-700">
+    <div class="grid grid-cols-12">
+      <div class="col-start-1 col-span-12 text-center mt-8">
+        <h1 class="font-bold text-3xl"><%= gettext "Welcome to %{name}!", name: "Gazer" %></h1>
+        <p>GOTO system for AZ mounts</p>
+        <a href="/config" class="underline">Configuration</a>
+        <%#a href="/motor_speed" class="underline">Motor speed</a%>
+        <div class="my-2 text-sm flex justify-center">
+          <label class="flex items-center relative w-max cursor-pointer select-none">
+            <span class="text-sm mr-3">Keep screen always on</span>
+            <input type="checkbox" class="appearance-none transition-colors cursor-pointer w-14 h-7 rounded-full text-black
+                                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-blue-500
+                                          bg-black border-black checked:text-green-900 invisible"
+                                   role="switch" onclick="toggleLock()" id="screentoggle"/>
+                <script>
+                  var noSleep = new NoSleep();
+                  function toggleLock() {
+                    var st = document.getElementById('screentoggle');
+                    if (st.checked == true) {
+                      noSleep.enable(); // keep the screen on!
+                    } else {
+                      noSleep.disable(); // let the screen turn off.
+                    }
+                  }
+                </script>
+            <span class="absolute font-medium text-xs uppercase right-1 text-neutral-400"> OFF </span>
+            <span class="absolute font-medium text-xs uppercase right-8 text-neutral-400"> ON </span>
+            <span class="w-7 h-7 right-7 absolute rounded-full transform transition-transform bg-red-900" />
+          </label>
+          <style>
+            body {
+              background-color: #171717; /* bg-true-gray-900 */
+              color: white;
+            }
+            input:checked {
+              background-color: #22c55e; /* bg-green-500 */
+            }
+            input:checked ~ span:last-child {
+              --tw-translate-x: 1.75rem; /* translate-x-7 */
+              background-color: green;
+            }
+          </style>
+        </div>
+
+        <.live_component module={UiWeb.Components.SiteInfo} id="site"/>
+      </div>
+    </div>
+  </section>
+
+  <section class="my-3 flex items-center dark:text-red-800">
+    <.live_component module={UiWeb.Components.ScopeInfo} id="scope"/>
+  </section>
+
+  <div class="flex justify-center font-bold">
+    <p class="alert alert-info" role="alert"
+      phx-click="lv:clear-flash"
+      phx-value-key="info"><%= live_flash(@flash, :info) %></p>
+
+    <p class="flex alert alert-danger" role="alert"
+      phx-click="lv:clear-flash"
+      phx-value-key="error"><%= live_flash(@flash, :error) %></p>
+  </div>
+
+  <%# https://www.tailwindtoolbox.com/components/accordion %>
+  <style>
+      /* Tab content - closed */
+      .tab-content {
+      max-height: 0;
+      -webkit-transition: max-height .35s;
+      -o-transition: max-height .35s;
+      transition: max-height .35s;
+      }
+      /* :checked - resize to full height */
+      .tab input:checked ~ .tab-content {
+      max-height: 100vh;
+      }
+      /* Icon */
+      .tab label::after {
+      float:right;
+      right: 0;
+      top: 0;
+      display: block;
+      width: 1.5em;
+      height: 1.5em;
+      line-height: 1.5;
+      font-size: 1.25rem;
+      text-align: center;
+      -webkit-transition: all .35s;
+      -o-transition: all .35s;
+      transition: all .35s;
+      }
+      /* Icon formatting - closed */
+      .tab input[type=radio] + label::after {
+      content: "\25BE";
+      font-weight:bold; /*.font-bold*/
+      border-width: 1px; /*.border*/
+      border-radius: 9999px; /*.rounded-full */
+      border-color: #b91c1c; /*.border-red-700*/
+      }
+      /* Icon formatting - open */
+      .tab input[type=radio]:checked + label::after {
+      transform: rotateX(180deg);
+      background-color: #000000; /*.bg-black*/
+      color: #b91c1c; /*.text-red-700*/
+      }
+  </style>
+
+  <div class="shadow-md text-red-700 px-1 m-1">
+    <div class="tab w-full overflow-hidden">
+        <input class="absolute opacity-0" id="tab-single-one" type="radio" name="tabs2">
+        <label class="block p-5 leading-normal cursor-pointer" for="tab-single-one">Calibration</label>
+        <div class="tab-content overflow-hidden leading-normal mb-1">
+          <.live_component module={UiWeb.Components.Calibration} id="calibration"/>
+        </div>
+    </div>
+    <div class="tab w-full overflow-hidden border-t border-red-700">
+        <input class="absolute opacity-0" id="tab-single-two" type="radio" name="tabs2">
+        <label class="block p-5 leading-normal cursor-pointer" for="tab-single-two">Find Solar System Object</label>
+        <div class="tab-content overflow-hidden leading-normal mb-1">
+          <.live_component module={UiWeb.Components.PlanetSelection} id="select-planet" />
+        </div>
+    </div>
+    <div class="tab w-full overflow-hidden border-t border-red-700">
+        <input class="absolute opacity-0" id="tab-single-three" type="radio" name="tabs2">
+        <label class="block p-5 leading-normal cursor-pointer" for="tab-single-three">Filter DSO</label>
+        <div class="tab-content overflow-hidden leading-normal mb-1">
+          <.live_component module={UiWeb.Components.DeepSkySearch} id="search-dso" />
+        </div>
+    </div>
+    <div class="tab w-full overflow-hidden border-t border-red-700">
+        <input class="absolute opacity-0" id="tab-single-four" type="radio" name="tabs2">
+        <label class="block p-5 leading-normal cursor-pointer" for="tab-single-four">Find DSO</label>
+        <div class="tab-content overflow-hidden leading-normal mb-1">
+          <.live_component module={UiWeb.Components.DeepSkySelect} id="select-dso" />
+        </div>
+    </div>
+    <div class="tab w-full overflow-hidden border-t border-red-700">
+        <input class="absolute opacity-0" id="tab-single-five" type="radio" name="tabs2">
+        <label class="block p-5 leading-normal cursor-pointer" for="tab-single-five">Find Double Star</label>
+        <div class="tab-content overflow-hidden leading-normal mb-1">
+          <p class="flex justify-center mb-5">Not implemented yet</p>
+        </div>
+    </div>
+  </div>
+  <script>
+      /* Optional Javascript to close the radio button version by clicking it again */
+      var myRadios = document.getElementsByName('tabs2');
+      var setCheck;
+      var x = 0;
+      for(x = 0; x < myRadios.length; x++){
+          myRadios[x].onclick = function(){
+              if(setCheck != this){
+                  setCheck = this;
+              }else{
+                  this.checked = false;
+                  setCheck = null;
+          }
+          };
+      }
+  </script>
+
+</div>

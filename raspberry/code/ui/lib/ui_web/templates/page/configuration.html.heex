@@ -1,0 +1,99 @@
+<div class="w-screen min-h-screen dark:bg-black">
+  <section class="dark:text-red-700 mx-4">
+    <div class="my-4">
+        <h1 class="font-bold text-3xl text-center">motors configuration</h1>
+        <h2 class="font-bold text-2xl text-center">instructions</h2>
+        <div class="text-center">
+            <p class="text-sm text-red-800 my-2 mx-5">if you know the <span class="font-bold text-red-500">total gear reduction</span> you can insert it directly in the first fields
+            as the <span class="font-bold text-red-500">number of full motor steps required to rotate the scope one degree</span>. You can skip the other fields</p>
+            <p class="text-sm text-red-800 my-2 mx-5">Otherwise leave the first field empty. It will be calculated from the others</p>
+            <p class="text-sm text-red-500 font-bold my-2 mx-5">Tick the motor reversion if it spins in the wrong direction</p>
+        </div>
+    </div>
+    <div>
+    <%= form_for @conn.assigns.conf, Routes.page_path(@conn, :update_configuration), [class: "flex flex-col items-center"], fn f -> %>
+        <fieldset class="border-solid border border-red-800 rounded-md px-4 pb-4 m-1"><legend class="text-sm px-2">Time Zone</legend>
+            <p class="text-sm text-red-800 mb-2 mx-5">Setting the TimeZone is entirely optional.</p>
+            <p class="text-sm text-red-800 mb-2 mx-5">The system only uses UTC</p>
+            <%= select(f, :tz, Tzdata.canonical_zone_list(), [prompt: @conn.assigns.conf.timezone, selected: @conn.assigns.conf.timezone, class: "border text-s rounded-md focus:ring-inset border-red-700 text-gray-500 bg-neutral-700 focus:ring-emerald-600"]) %>
+        </fieldset>
+        <div class="flex flex-row">
+        <fieldset class="border-solid border border-red-800 rounded-md p-4 m-1"><legend class="text-sm px-2">ALT Motor</legend>
+            <div class="mb-5 text-xs">
+                <div>
+                    <%= label f, :alt_worm, "Total gear reduction" %>
+                    <%= number_input f, :alt_fspd, [value: @conn.assigns.conf.stepper_conf.alt_fspd, size: "5", class: "text-gray-500 bg-neutral-700 appearance-none"] %>
+                </div>
+            </div>
+            <div class="my-5 text-xs">
+                <%= label f, :alt_r, "Revert ALT motor direction" %>
+                <%= checkbox f, :alt_r, [value: @conn.assigns.conf.stepper_conf.alt_r] %>
+            </div>
+            <fieldset class="border-solid border border-red-800 rounded-md p-4 m-1"><legend class="text-sm px-2">or</legend>
+                <div class="text-xs my-1">
+                    <%= label f, :alt_worm, "# of worm teeth", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :alt_worm, [value: @conn.assigns.conf.stepper_conf.alt_worm, size: "5", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+                <div class="text-xs my-1">
+                    <%= label f, :alt_bp, "# of Big Pulley teeth", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :alt_bp, [value: @conn.assigns.conf.stepper_conf.alt_bp, size: "5", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+                <div class="text-xs my-1">
+                    <%= label f, :alt_sp, "# of Small Pulley teeth", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :alt_sp, [value: @conn.assigns.conf.stepper_conf.alt_sp, size: "5", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+                <div class="text-xs my-1">
+                    <%= label f, :alt_mds, "degrees per motor step", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :alt_mds, [value: @conn.assigns.conf.stepper_conf.alt_mds, size: "5", step: "0.1", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+            </fieldset>
+        </fieldset>
+        <fieldset class="border-solid border border-red-800 rounded-md p-4 m-1"><legend class="text-sm px-2">AZ Motor</legend>
+            <div class="mb-5 text-xs">
+                <div>
+                    <%= label f, :az_worm, "Total gear reduction" %>
+                    <%= number_input f, :az_fspd, [value: @conn.assigns.conf.stepper_conf.az_fspd, size: "5", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+            </div>
+            <div class="my-5 text-xs">
+                <%= label f, :az_r, "Revert ALT motor direction" %>
+                <%= checkbox f, :az_r, [value: @conn.assigns.conf.stepper_conf.az_r] %>
+            </div>
+            <fieldset class="border-solid border border-red-800 rounded-md p-4 m-1"><legend class="text-sm px-2">or</legend>
+                <div class="text-xs my-1">
+                    <%= label f, :az_worm, "# of worm teeth", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :az_worm, [value: @conn.assigns.conf.stepper_conf.az_worm, size: "5", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+                <div class="text-xs my-1">
+                    <%= label f, :az_bp, "# of Big Pulley teeth", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :az_bp, [value: @conn.assigns.conf.stepper_conf.az_bp, size: "5", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+                <div class="text-xs my-1">
+                    <%= label f, :az_sp, "# of Small Pulley teeth", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :az_sp, [value: @conn.assigns.conf.stepper_conf.az_sp, size: "5", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+                <div class="text-xs my-1">
+                    <%= label f, :az_mds, "degrees per motor step", class: "inline-block text-left w-32" %>
+                    <%= number_input f, :az_mds, [value: @conn.assigns.conf.stepper_conf.az_mds, size: "5", step: "0.1", class: "text-gray-500 bg-neutral-700"] %>
+                </div>
+            </fieldset>
+        </fieldset>
+        </div>
+
+        <%#fieldset class="border-solid border border-red-800 rounded-md p-4 m-1"><legend class="text-sm px-2">Calibration motor speed</legend>
+            <p class="text-sm text-red-800 mb-2 mx-5">Setting the TimeZone is entirely optional.</p>
+            <p class="text-sm text-red-800 mb-2 mx-5">The system only uses UTC</p>
+            <%= select(f, :cs, ["2° per sec": "2", "3° per sec": "3"], [prompt: @conn.assigns.conf.cal_speed, selected: @conn.assigns.conf.cal_speed, class: "border text-s rounded-md focus:ring-inset border-red-700 text-gray-500 bg-neutral-700 focus:ring-emerald-600"]) % >
+        </fieldset%>
+        
+        <div class="flex flex-col items-center">
+            <div class="flex flex-row justify-center">
+                <%= submit "Save configuration", class: "mx-5 bg-green-800 hover:bg-green-700 text-s text-white font-bold py-2 px-4 rounded my-3 w-48"%>
+                <%= button("Factory settings", to: "/config/factory_reset", class: "mx-5 bg-red-800 hover:bg-red-700 text-s text-white font-bold py-2 px-4 rounded my-3 w-48")%>
+            </div>
+            <%= button("Go back without saving", to: "/", method: :get, class: "mx-5 bg-red-800 hover:bg-red-700 text-s text-white font-bold py-2 px-4 rounded my-3 w-60")%>
+        </div>
+    <% end %>
+    </div>
+</section>
+</div>

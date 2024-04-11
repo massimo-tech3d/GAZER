@@ -1,0 +1,25 @@
+<div class="w-screen min-h-screen dark:bg-black">
+  <section class="dark:text-red-700 mx-4">
+    <div class="my-4">
+        <h1 class="font-bold text-3xl text-center">TESTING AZ MOTOR SPEED</h1>
+    </div>
+    <div class="my-4">
+        <h2 class="font-bold text-xl text-center">Select testing speed and touch GO</h2>
+    </div>
+    <div>
+      <%= form_for @conn.assigns.speeds, Routes.page_path(@conn, :speed_test), [class: "flex flex-col items-center"], fn f -> %>
+        <%= select(f, :speed, @conn.assigns.speeds, [selected: @conn.assigns.speed, class: "border text-s rounded-md focus:ring-inset border-red-700 text-gray-500 bg-neutral-700 focus:ring-emerald-600"]) %>
+          <div class="flex justify-end">
+            <%= submit "GO", class: "mx-5 bg-green-800 hover:bg-green-700 text-s text-white font-bold py-2 px-4 rounded my-3 w-48"%>
+          </div>
+          <div class="flex justify-end">
+            <%= button("STOP", to: "/speed_test/stop", class: "mx-5 bg-red-800 hover:bg-red-700 text-s text-white font-bold py-2 px-4 rounded my-3 w-48")%>
+         </div>
+         <div class="flex justify-end">
+            <%= button("Go back", to: "/speed_test/end", method: :post, class: "mx-5 bg-blue-800 hover:bg-red-700 text-s text-white font-bold py-2 px-4 rounded my-3 w-60")%>
+        </div>
+      <% end %>
+    </div>
+
+</section>
+</div>
