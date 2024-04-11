@@ -23,9 +23,12 @@ When booted the Raspberry will provide it's own access point, gazer, to which th
 If the browser doesn't open GAZER home page automatically, it can be reached by visiting the address 192.168.3.1 with any browser after half a minute or so.
 
 From the same smartphone launch the app "GPSd Forwarder" (available on Play Store and github), wait for GPS acquisition and activate the data forwarding to 192.168.3.1:1111
-the app can be switched off as soon as the GAZER home page shows correct coordinates and time.
 
-After everything is connected, and GPS position is reflected in the webapp, the calibrations should be performed. Tap on the Calibration tab, read the instructions and proceed in the order suggested.
+The app can be switched off as soon as the GAZER home page shows correct coordinates and time.
+
+After everything is connected, and GPS position is reflected in the webapp, the calibrations should be performed.
+
+Tap on the Calibration tab, read the instructions and proceed in the order suggested.
 
 Now you can search for celestial objects to observe using one of the three widgets provided:
 
