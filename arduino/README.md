@@ -41,7 +41,7 @@ We have briefly tested the skecth also on an ESP32 WROOM board and it can be use
 The sketch, and the PCB, only support the Teensy 4.0. Support for the ESP, as well as other same level micros, would require changing the pinout mappings in the sketch and changing the PCB design.
 
 ### Supported MEMS are:
-* Magnetometers: ST LIS3MDL (reccommended), PNI RM3100 (reccommended).
+* Magnetometers: ST LIS3MDL (reccommended), PNI RM3100
 * Untilt accelerometers: NXP MMA8451 (reccommended), InvenSense MPU6050
 * Accelerometer: ST LSM6DSV
 
