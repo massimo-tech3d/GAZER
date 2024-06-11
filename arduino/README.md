@@ -27,9 +27,9 @@ It depends on you mount and setup. For dobsons you should chose the 2D version, 
 
 It also takes less time to calibrate.
 
-Telescopes mounted on other types of platform can also use the 3D skecth, if you can position the magnetometer away from motors and away from the OTA (if this is made of ferromagnetic metal).
+Telescopes mounted on other types of platform can also use the 2D skecth, if you can position the magnetometer away from motors and away from the OTA (if this is made of ferromagnetic metal).
 
-If this is not the case, it is necessary to use the 3D version and place the sensors directy on the OTA. It is not a problem if this is ferromagnetic, because the magnetometer will not be moving with respect to it, therefore the magnetic pertubations can be compensated by the calibration procedure.
+If this is not the case, it is necessary to use the 3D version and hook the sensors on the OTA (if not ferromagnetic) or in a spot on the mount that follows the OTA movements.
 
 In case of 2D version and magnetometer too close to metallic OTA, this will disturb the magnetic field when changing it's altitude. There is a compensation function to limit this phenomenon but it is reccomended to avoid it at all, rather than compensating it.
 
