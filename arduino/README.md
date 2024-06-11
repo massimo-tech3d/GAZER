@@ -6,7 +6,7 @@ The sensors required are an accelerometer (rotating with the OTA) to calculate t
 
 The difference between the two sketches is how the magnetometer is handled.
 
-#2D
+# 2D
 The 2D Sketch requires the magnetometer to be positioned flat on the mount and rotate with it, disregarding the OTA inclinations. It uses a second accelerometer on the same board of the magnetometer to compensate for potential off levels - tripod and mount or a mismounted magnetometer board, **Small degrees off level (say up to 5° or 10° at best) can be compensated by the second accelerometer**
 
 The second accelerometer is strongly reccommended but the system will work also without it. In this case you should ensure that the telescope mount and the magnetometer itself are perfectly level, or the Azimuth readings will be way off.
@@ -15,14 +15,14 @@ The sensor calibration carousels 360° back and forth the azimuth axis, with the
 
 The carouselling requires approximately 4 minutes.
 
-#3D
+# 3D
 The 3D Sketch requires magnetometer and accelerometer on the same board on the OTA rotating with the OTA both in Azimuth and Altitude. The second accelerometer in not required.
 
 The sensor calibration carousels 360° back and forth two times the azimuth axis, with the OTA positioned at 0° (horizontal), 45°, 90° and 135° (backtilted), and then performs 3D ellipsoid fitting of the sensors readings to calculate hard iron and soft iron correction parameters.
 
 The carouselling requires approximately 10 minutes.
 
-##Which should be chosen
+## Which should be chosen
 It depends on you mount and setup. For dobsons you should chose the 2D version, since it does not backtilt the OTA and because there will not be problems in finding a good place to install the magnetomer board, away at least 20cm from motors, The aluminium/wooden OTA will not cause interferences.
 
 It also takes less time to calibrate.
