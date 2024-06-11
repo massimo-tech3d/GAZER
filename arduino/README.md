@@ -31,9 +31,9 @@ Telescopes mounted on other types of platform can also use the 2D skecth, if you
 
 If this is not the case, it is necessary to use the 3D version and hook the sensors on the OTA (if not ferromagnetic) or in a spot on the mount that follows the OTA movements.
 
-In case of 2D version and magnetometer too close to metallic OTA, this will disturb the magnetic field when changing it's altitude. There is a compensation function to limit this phenomenon but it is reccomended to avoid it at all, rather than compensating it.
+In case of 2D version and magnetometer too close to metallic OTA, this will disturb the magnetic field when changing it's altitude. There is a compensation function to limit this phenomenon but it is reccommended to avoid it at all, rather than compensating it.
 
-In sinthesys the main advantages of the two setups are:
+In synthesis the main advantages of the two setups are:
 * 2D version
 	- faster calibration procedure
 	- OTA vertical during carouselling - no issues with space requirements
