@@ -1,62 +1,86 @@
-The sketch gazza requires a magnetometer and two accelerometers.
-We call **Accelerometer** the sensor employed to measure the attitude of the OTA and we call **Sensor Block** the combination of magnetometer and the second accelerometer used to compensate potential unlevel of the magnetometer.
+The repository includes two sketches, Gazza2D and Gazza3D.
 
-The *Sensor Block* needs to be positioned on the mount so that it rotates together with the azimuth axis.
+Their role is to read the sensors and calculate Altitude and Azimuth of the Telescope OTA for the main Gazer app, which run on the connected Raspberry Pi 3.
 
-The *Accelerometer* is used to measure the attitude of the OTA and, of course, needs to be bound to the OTA and tilt together with it.
+The sensors required are an accelerometer (rotating with the OTA) to calculate the Altidude, and a Magnetometer to calculate the Azimuth.
 
-The system performs the ***mandatory*** magnetometer calibration by rotating the scope tube to the zenith and then spinning the azimuth 360° round trip. In this meantime, the microcontroller collects magnetometer readings and calculates the accurate 2D calibration by:
-1) fitting the ellipse from the readings
-2) calculating Hard Iron error from the center of the ellipse
-3) calculating Soft Iron matrix from the major axis of the ellipse and it's rotation from the x-axis
+The difference between the two sketches is how the magnetometer is handled.
 
-these HI / SI errors will then be cancelled from every subsequent mag reading. The calibrated mag readings will also be untilted, before calculating the azimuth.
+#2D
+The 2D Sketch requires the magnetometer to be positioned flat on the mount and rotate with it, disregarding the OTA inclinations. It uses a second accelerometer on the same board of the magnetometer to compensate for potential off levels - tripod and mount or a mismounted magnetometer board, **Small degrees off level (say up to 5° or 10° at best) can be compensated by the second accelerometer**
 
-Since a full 3D calibration is not possible on a telescope, we miss the vertical components of the Soft Iron (the Hard Iron can be fully calculated).
-This means the untilt functionality is reliable only for relatively small angles, say 10° ==> when setting up the telescope, you only need to grossly level the mount/tripod. **No need to perfectly level to a fraction of degree !**
+The second accelerometer is strongly reccommended but the system will work also without it. In this case you should ensure that the telescope mount and the magnetometer itself are perfectly level, or the Azimuth readings will be way off.
 
-Depending on your mount, if the sensor block cannot be positioned far enough from a metallic OTA, this may create magnetic interferences with the magnetometer when changing attitude, compared to the position during calibration.
+The sensor calibration carousels 360° back and forth the azimuth axis, with the OTA conveniently positioned verticallly, and then performs 2D ellipse fitting of the sensors readings to calculate hard iron and soft iron correction parameters.
 
-An additional ***optional*** compensation step may then be required to compensate this intereference. It is anyway strongly reccommended to choose a different placement of the Sensor Block, if at all possible.
+The carouselling requires approximately 4 minutes.
 
-During the comnpensation step, the scope is rotated to Azimuth 180° (South) and Altitude 90° (Vertical, should already be vertical after the previous calibration phase).
+#3D
+The 3D Sketch requires magnetometer and accelerometer on the same board on the OTA rotating with the OTA both in Azimuth and Altitude. The second accelerometer in not required.
 
-The scope is then slowly rotated (1° per second) to horizontal position. During this swing, the system reads the Azimuth every 0.5° and stores the deviation from 180°. This deviation will be added to the actual Azimuth readings (depending on Altitude) during normal telescope operations.
+The sensor calibration carousels 360° back and forth two times the azimuth axis, with the OTA positioned at 0° (horizontal), 45°, 90° and 135° (backtilted), and then performs 3D ellipsoid fitting of the sensors readings to calculate hard iron and soft iron correction parameters.
 
-**This second step is not necessary in aluminium or wooden made OTAs, such as Dobsonians, or if the Sensor Block is 20/25 cm away from the OTA**
+The carouselling requires approximately 10 minutes.
 
-The calibration procedure is coordinated by the Elixir software on the Raspberry, and is initiated by the user.
+##Which should be chosen
+It depends on you mount and setup. For dobsons you should chose the 2D version, since it does not backtilt the OTA and because there will not be problems in finding a good place to install the magnetomer board, away at least 20cm from motors, The aluminium/wooden OTA will not cause interferences.
 
-For testing purposes calibration can also be initiated from arduino IDE console by issuing the command "m_calibration XYZ" where XYZ is the duration required in seconds, after connecting the optional USB cable to the workstation.
+It also takes less time to calibrate.
 
-To test the second calibration step, the command is "m_cal_to_horizontal XYZ".
+Telescopes mounted on other types of platform can also use the 3D skecth, if you can position the magnetometer away from motors and away from the OTA (if this is made of ferromagnetic metal).
 
-## Hardware parts
+If this is not the case, it is necessary to use the 3D version and place the sensors directy on the OTA. It is not a problem if this is ferromagnetic, because the magnetometer will not be moving with respect to it, therefore the magnetic pertubations can be compensated by the calibration procedure.
 
-### Microcontroller
+In case of 2D version and magnetometer too close to metallic OTA, this will disturb the magnetic field when changing it's altitude. There is a compensation function to limit this phenomenon but it is reccomended to avoid it at all, rather than compensating it.
+
+In sinthesys the main advantages of the two setups are:
+* 2D version
+	- faster calibration procedure
+	- OTA vertical during carouselling - no issues with space requirements
+	- does not backtilt the OTA during calibration
+* 3D version
+	- less number of sensors
+	- just one sensor board and one sensor cable
+
+
+In both sketches the magnetometer calibration procedure is intiated by the user and coordinated by the Elixir software on the Raspberry.
+
+The Accelerometer calibration is much simpler, the OTA is placed horizontal and a reading is taken via a button on the phone GUI. The same is then repeatd with the OTA in vertical position.
+
+# Hardware parts
+
+## Microcontroller
 The magnetometer calibration and untilting require extensive float operations. Therefore the AVR Microcontrollers are not suitable. The reccommended choice is a Teensy 4.0 board.
 
-We have briefly tested the skecth also on an ESP32 WROOM board and it can be used. We preferred the Teensy over the ESP32 because of its smaller footprint.
+We have briefly tested the skecth also on an ESP32 WROOM board and it compiles and runs, however we have not done any extensive testing. We preferred the Teensy over the ESP32 because of its smaller footprint.
 
 The sketch, and the PCB, only support the Teensy 4.0. Support for the ESP, as well as other same level micros, would require changing the pinout mappings in the sketch and changing the PCB design.
 
-### Supported MEMS are:
+## Supported MEMS are:
+3D version:
 * Magnetometers: ST LIS3MDL (reccommended), PNI RM3100
+* Accelerometer: ST LSM6DSV (reccommended), InvenSense MPU6050
+
+2D version:
+* Magnetometers: ST LIS3MDL (reccommended), PNI RM3100
+* Accelerometer: ST LSM6DSV (reccommended), NXP MMA8451
 * Untilt accelerometers: NXP MMA8451 (reccommended), InvenSense MPU6050
-* Accelerometer: ST LSM6DSV
+
+Note: the two accelerometers must be different. Not possible to use MMA8451 in both positions.
+
 
 Datasheets:
 * ST LIS3MDL https://www.st.com/resource/en/datasheet/lis3mdl.pdf
+* ST LSM6DSV https://www.st.com/resource/en/datasheet/lsm6dsv.pdf
 * PNI RM3100 https://www.tri-m.com/products/pni/RM3100-User-Manual.pdf
 * NXP MMA8451 https://www.nxp.com/docs/en/data-sheet/MMA8451Q.pdf
 * IS MPU6050 https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf
-* ST LSM6DSV https://www.st.com/resource/en/datasheet/lsm6dsv.pdf
 
-other sensors can be employed by writing the relevant (simple) header file
+other sensors, supporting i2c interface, can be employed by writing the relevant (simple) header file
 
-The usual breakout boards vendors will have BBs for all these sensors, always choose those with i2c interface. Exception is the RM3100 whose BB is sold directly on the PNI site. Keep away from the chinese ones sold on Amazon, they are low quality and do not support i2c interface. During the development, the PNI BB was not available and we had to use a SPI to i2c converter, which complicates a lot the Sensor BLock hardware.
+The usual breakout boards vendors will have BBs for all these sensors. Exception is the RM3100 whose BB is sold directly on the PNI site. Keep away from the chinese ones sold on Amazon and labelled "Military grade", they are poor quality and do not support i2c interface. During the development, the PNI BB was not available and we had to use an SPI to i2c converter, which complicated a lot the Sensor Block hardware.
 
-For this reason the RM3100 is not the reccommended choice, otherwise it might be because the sensor is by far the less noisy of the lot. If you can access the PNI BB, that could be a very good choice (though we haven't tested it).
+For this reason the RM3100 is not the reccommended choice otherwise it might be, because the sensor is by far the less noisy of the lot. If you can access the PNI BB, that could be a very good choice (though we haven't tested it).
 
-### Joystick
+## Joystick
 any analog joystick for arduino with 5 contacts will fit. Just needs X and Y movements and pushbutton function. Wiring is explained in the hardware section of this repository.

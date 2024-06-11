@@ -4,8 +4,7 @@ flash the firmware.x.y.fw file to a microsd card and plug it in the Raspberry Pi
 
 (firmware.fw sha256: 3307be91864f4990a0d53673387666f02c0a14a20f214d5dde0356f2f8def148
 
- on Ubuntu it can be checked with the command **sha256sum firmware.x.y.fw** if the file is ok
- you should get the number above)
+ on Ubuntu it can be checked with the command **sha256sum firmware.x.y.fw** if the file is ok you should get the number above)
 
 If you prefer to compile from source code:
 * Ensure elixir is up to date (1.13) and run *mix install nerves* (see https://nerves-project.org/)
@@ -32,10 +31,12 @@ Tap on the Calibration tab, read the instructions and proceed in the order sugge
 
 Now you can search for celestial objects to observe using one of the three widgets provided:
 
-#### Planet search
+#### Find Solar System Object
 to find the Moon and the 8 planets (Pluto included) by name
-#### Deep Sky Object
+#### Filter DSO
 by specifying the main characteristics (Magnitude, type of object etc.) of the object desired, a list of compatible objects will be provided for you to choose.
 Objects lower than 15° from the horizon are considered not visible and will not be shown.
-#### Deep Sky Object by catalogue and number
+#### Find DSO
 the full NGC and IC catalogues are included. For example NGC 1976 or M 42 will take you straight to the Orion Nebula.
+#### Find Double Star
+this has not been developed yet
